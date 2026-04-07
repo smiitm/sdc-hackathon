@@ -1,13 +1,58 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User { 
+  id          String   @id @default(cuid())
+  clerkId     String   @unique
+  email       String   @unique
+  name        String?
+  bio         String?
+  avatarUrl   String?
+  skills      String[] 
+  interests   String[]
+  projects    Project[] @relation("ProjectOwner")
+  memberships ProjectMember[]
+  opportunities Opportunity[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+} 
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  techStack   String[]
+  owner       User     @relation("ProjectOwner", fields: [ownerId], references: [id])
+  ownerId     String
+  members     ProjectMember[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  role      String   @default("COLLABORATOR") // OWNER, COLLABORATOR
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+}
+
+model Opportunity {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  type        String   // TEAM_UP, HIRING, HACKATHON
+  author      User     @relation(fields: [authorId], references: [id])
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
